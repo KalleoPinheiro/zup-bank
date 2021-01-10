@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ValidatesIfCustomerExistsUseCase() {
+class ValidatesWhetherCustomerExistsUseCase() {
 
     @Autowired lateinit var repository: CustomerRepository
 

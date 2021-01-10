@@ -1,4 +1,4 @@
-package com.plan.formation.zupbank.utils
+package com.plan.formation.zupbank.utils.validators
 
 class CpfValidator {
     companion object {

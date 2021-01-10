@@ -1,6 +1,6 @@
 package com.plan.formation.zupbank.customer
 
-import com.plan.formation.zupbank.customer.useCases.ValidatesIfCustomerExistsUseCase
+import com.plan.formation.zupbank.customer.dtos.CustomerView
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,9 +15,9 @@ class CustomerController {
     @Autowired private lateinit var customerService: CustomerService
 
     @PostMapping
-    fun create(@RequestBody customer: CustomerModel): ResponseEntity<CustomerModel> {
+    fun create(@RequestBody customer: CustomerModel): ResponseEntity<CustomerView> {
         return try {
-            ResponseEntity.ok(customerService.createUser(customer))
+            ResponseEntity(customerService.createUser(customer), HttpStatus.CREATED)
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be created", err
@@ -26,12 +26,46 @@ class CustomerController {
     }
 
     @GetMapping
-    fun list(): ResponseEntity<MutableIterable<CustomerModel>> {
+    fun list(): ResponseEntity<List<CustomerModel>> {
         return try {
             ResponseEntity.ok(customerService.listUsers())
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customers could not be found", err
+            )
+        }
+    }
+
+    @GetMapping("/{document}")
+    fun find(@PathVariable("document") document: String): ResponseEntity<CustomerView> {
+        return try {
+            ResponseEntity.ok(customerService.findUser(document))
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Customer could not be found", err
+            )
+        }
+    }
+
+    @PutMapping("/{document}")
+    fun update(@PathVariable("document") document: String, @RequestBody customer: CustomerModel): ResponseEntity<CustomerView> {
+        return try {
+            ResponseEntity.ok(customerService.updateUser(document, customer))
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be updated", err
+            )
+        }
+    }
+
+    @DeleteMapping("/{document}")
+    fun remove(@PathVariable("document") document: String): ResponseEntity<Void> {
+        return try {
+            customerService.deleteUser(document)
+            ResponseEntity(HttpStatus.ACCEPTED)
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be deleted", err
             )
         }
     }

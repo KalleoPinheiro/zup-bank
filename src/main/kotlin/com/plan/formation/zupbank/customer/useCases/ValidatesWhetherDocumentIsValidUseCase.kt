@@ -5,7 +5,7 @@ import com.plan.formation.zupbank.utils.validators.CpfValidator
 import org.springframework.stereotype.Service
 
 @Service
-class ValidatesWhetherDocumentIsValid {
+class ValidatesWhetherDocumentIsValidUseCase {
     fun handle(document: String) {
         if (!CpfValidator.myValidateCPF(document)) {
             throw RuntimeException ("User document: ${document} is invalid")

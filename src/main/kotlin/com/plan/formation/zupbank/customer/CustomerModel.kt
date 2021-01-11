@@ -1,5 +1,7 @@
 package com.plan.formation.zupbank.customer
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.plan.formation.zupbank.account.AccountModel
 import javax.persistence.*
 import javax.validation.constraints.*
 
@@ -15,5 +17,9 @@ data class CustomerModel(
 
     @field:NotNull
     @field:Column(length=11)
-    var document: String
+    var document: String,
+
+    @OneToOne(mappedBy = "customer", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @JsonIgnore
+    val account: AccountModel? = null
 )

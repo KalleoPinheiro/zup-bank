@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import java.util.*
 
 
 @RestController
@@ -17,7 +18,7 @@ class CustomerController {
     @PostMapping
     fun create(@RequestBody customer: CustomerModel): ResponseEntity<CustomerView> {
         return try {
-            ResponseEntity(customerService.createUser(customer), HttpStatus.CREATED)
+            ResponseEntity(customerService.createCustomer(customer), HttpStatus.CREATED)
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be created", err
@@ -26,9 +27,9 @@ class CustomerController {
     }
 
     @GetMapping
-    fun list(): ResponseEntity<List<CustomerModel>> {
+    fun list(): ResponseEntity<List<CustomerView>> {
         return try {
-            ResponseEntity.ok(customerService.listUsers())
+            ResponseEntity.ok(customerService.listCustomers())
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customers could not be found", err
@@ -39,7 +40,7 @@ class CustomerController {
     @GetMapping("/{document}")
     fun find(@PathVariable("document") document: String): ResponseEntity<CustomerView> {
         return try {
-            ResponseEntity.ok(customerService.findUser(document))
+            ResponseEntity.ok(customerService.findCustomer(document))
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customer could not be found", err
@@ -50,7 +51,7 @@ class CustomerController {
     @PutMapping("/{document}")
     fun update(@PathVariable("document") document: String, @RequestBody customer: CustomerModel): ResponseEntity<CustomerView> {
         return try {
-            ResponseEntity.ok(customerService.updateUser(document, customer))
+            ResponseEntity.ok(customerService.updateCustomer(document, customer))
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be updated", err
@@ -61,7 +62,7 @@ class CustomerController {
     @DeleteMapping("/{document}")
     fun remove(@PathVariable("document") document: String): ResponseEntity<Void> {
         return try {
-            customerService.deleteUser(document)
+            customerService.deleteCustomer(document)
             ResponseEntity(HttpStatus.ACCEPTED)
         } catch (err: RuntimeException) {
             throw ResponseStatusException(

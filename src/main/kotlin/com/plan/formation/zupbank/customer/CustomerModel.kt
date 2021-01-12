@@ -2,6 +2,7 @@ package com.plan.formation.zupbank.customer
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.plan.formation.zupbank.account.AccountModel
+import com.plan.formation.zupbank.transaction.TransactionModel
 import javax.persistence.*
 import javax.validation.constraints.*
 
@@ -21,5 +22,9 @@ data class CustomerModel(
 
     @OneToOne(mappedBy = "customer", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @JsonIgnore
-    val account: AccountModel? = null
+    val account: AccountModel? = null,
+
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @JsonIgnore
+    val transaction: List<TransactionModel>? = null
 )

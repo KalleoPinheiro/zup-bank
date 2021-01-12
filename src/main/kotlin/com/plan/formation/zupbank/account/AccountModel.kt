@@ -1,6 +1,8 @@
 package com.plan.formation.zupbank.account
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.plan.formation.zupbank.customer.CustomerModel
+import com.plan.formation.zupbank.transaction.TransactionModel
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
@@ -29,5 +31,9 @@ data class AccountModel(
 
     @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
-    val customer: CustomerModel
+    val customer: CustomerModel,
+
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @JsonIgnore
+    val transaction: List<TransactionModel>? = null
 )

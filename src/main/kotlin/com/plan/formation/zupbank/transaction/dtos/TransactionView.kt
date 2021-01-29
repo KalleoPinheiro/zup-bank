@@ -7,4 +7,5 @@ data class TransactionView (
     val customer: String,
     val account_number: String,
     val account_balance: String,
+    val checking_copy: String,
 )

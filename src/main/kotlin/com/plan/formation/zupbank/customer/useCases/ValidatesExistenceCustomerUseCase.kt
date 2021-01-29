@@ -10,7 +10,7 @@ class ValidatesExistenceCustomerUseCase {
     lateinit var repository: CustomerRepository
 
     fun exists(document: String) {
-        val existingCustomer = repository.findByDocument((document))
+        val existingCustomer = repository.findByDocument(document)
 
         if (existingCustomer.isPresent) {
             throw RuntimeException ("User already exists!")

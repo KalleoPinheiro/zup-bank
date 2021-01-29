@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 class ValidatesWhetherDocumentIsValidUseCase {
     fun handle(document: String) {
         if (!CpfValidator.myValidateCPF(document)) {
-            throw RuntimeException ("User document: ${document} is invalid")
+            throw RuntimeException ("User document: $document is invalid")
         }
     }
 }

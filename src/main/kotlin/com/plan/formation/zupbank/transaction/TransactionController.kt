@@ -1,6 +1,8 @@
 package com.plan.formation.zupbank.transaction
 
-import com.plan.formation.zupbank.transaction.dtos.TransactionDepositView
+import com.plan.formation.zupbank.transaction.dtos.TransactionDepositWithdrawalView
+import com.plan.formation.zupbank.transaction.dtos.TransactionTransferRequestView
+import com.plan.formation.zupbank.transaction.dtos.TransactionTransferView
 import com.plan.formation.zupbank.transaction.dtos.TransactionView
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -16,7 +18,7 @@ class TransactionController {
     @Autowired private lateinit var transactionService: TransactionService
 
     @PostMapping("deposit/{customer}")
-    fun deposit(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositView): ResponseEntity<TransactionView> {
+    fun deposit(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositWithdrawalView): ResponseEntity<TransactionView> {
         return try {
             ResponseEntity.ok(transactionService.deposit(customer, transactionRequest))
         } catch (err: RuntimeException) {
@@ -27,7 +29,7 @@ class TransactionController {
     }
 
     @PostMapping("withdrawal/{customer}")
-    fun withdrawal(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositView): ResponseEntity<TransactionView> {
+    fun withdrawal(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositWithdrawalView): ResponseEntity<TransactionView> {
         return try {
             ResponseEntity.ok(transactionService.withdrawal(customer, transactionRequest))
         } catch (err: RuntimeException) {
@@ -37,16 +39,16 @@ class TransactionController {
         }
     }
 
-//    @PostMapping("transfer")
-//    fun createTransfer(@RequestBody transaction: TransactionDepositViewModel): ResponseEntity<TransactionModel> {
-//        return try {
-//            ResponseEntity.ok(transactionService.transfer(transaction))
-//        } catch (err: RuntimeException) {
-//            throw ResponseStatusException(
-//                HttpStatus.INTERNAL_SERVER_ERROR, "Transfer cannot be performed", err
-//            )
-//        }
-//    }
+    @PostMapping("transfer/{customer}")
+    fun transfer(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionTransferRequestView): ResponseEntity<TransactionTransferView> {
+        return try {
+            ResponseEntity.ok(transactionService.transfer(customer, transactionRequest))
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Transfer cannot be performed", err
+            )
+        }
+    }
 
     @GetMapping
     fun list(): ResponseEntity<List<TransactionModel>> {

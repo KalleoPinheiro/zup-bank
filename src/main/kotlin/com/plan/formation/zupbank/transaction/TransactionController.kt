@@ -1,10 +1,6 @@
 package com.plan.formation.zupbank.transaction
 
-import com.plan.formation.zupbank.transaction.dtos.TransactionDepositWithdrawalView
-import com.plan.formation.zupbank.transaction.dtos.TransactionTransferRequestView
-import com.plan.formation.zupbank.transaction.dtos.TransactionTransferView
-import com.plan.formation.zupbank.transaction.dtos.TransactionView
-import org.springframework.beans.factory.annotation.Autowired
+import com.plan.formation.zupbank.transaction.dtos.*
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -13,12 +9,14 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("transactions")
-class TransactionController {
-
-    @Autowired private lateinit var transactionService: TransactionService
-
+class TransactionController(
+    private var transactionService: TransactionService
+) {
     @PostMapping("deposit/{customer}")
-    fun deposit(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositWithdrawalView): ResponseEntity<TransactionView> {
+    fun deposit(
+        @PathVariable("customer") customer: String,
+        @RequestBody transactionRequest: TransactionDepositWithdrawalView
+    ): ResponseEntity<TransactionView> {
         return try {
             ResponseEntity.ok(transactionService.deposit(customer, transactionRequest))
         } catch (err: RuntimeException) {
@@ -29,7 +27,10 @@ class TransactionController {
     }
 
     @PostMapping("withdrawal/{customer}")
-    fun withdrawal(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionDepositWithdrawalView): ResponseEntity<TransactionView> {
+    fun withdrawal(
+        @PathVariable("customer") customer: String,
+        @RequestBody transactionRequest: TransactionDepositWithdrawalView
+    ): ResponseEntity<TransactionView> {
         return try {
             ResponseEntity.ok(transactionService.withdrawal(customer, transactionRequest))
         } catch (err: RuntimeException) {
@@ -40,12 +41,37 @@ class TransactionController {
     }
 
     @PostMapping("transfer/{customer}")
-    fun transfer(@PathVariable("customer") customer: String, @RequestBody transactionRequest: TransactionTransferRequestView): ResponseEntity<TransactionTransferView> {
+    fun transfer(
+        @PathVariable("customer") customer: String,
+        @RequestBody transactionRequest: TransactionTransferRequestView
+    ): ResponseEntity<TransactionTransferView> {
         return try {
             ResponseEntity.ok(transactionService.transfer(customer, transactionRequest))
         } catch (err: RuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Transfer cannot be performed", err
+            )
+        }
+    }
+
+    @GetMapping("statement/{customer}")
+    fun statement(@PathVariable("customer") customer: String): ResponseEntity<List<TransactionModel>> {
+        return try {
+            ResponseEntity.ok(transactionService.statement(customer))
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Transfer cannot be performed", err
+            )
+        }
+    }
+
+    @GetMapping("/balance/{document}")
+    fun balance(@PathVariable("document") document: String): ResponseEntity<TransactionBalanceView> {
+        return try {
+            ResponseEntity.ok(transactionService.balance(document))
+        } catch (err: RuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Balance cannot be performed", err
             )
         }
     }
@@ -60,38 +86,4 @@ class TransactionController {
             )
         }
     }
-//
-//    @GetMapping("/{document}")
-//    fun find(@PathVariable("document") document: String): ResponseEntity<CustomerView> {
-//        return try {
-//            ResponseEntity.ok(customerService.findCustomer(document))
-//        } catch (err: RuntimeException) {
-//            throw ResponseStatusException(
-//                HttpStatus.INTERNAL_SERVER_ERROR, "Customer could not be found", err
-//            )
-//        }
-//    }
-//
-//    @PutMapping("/{document}")
-//    fun update(@PathVariable("document") document: String, @RequestBody customer: CustomerModel): ResponseEntity<CustomerView> {
-//        return try {
-//            ResponseEntity.ok(customerService.updateCustomer(document, customer))
-//        } catch (err: RuntimeException) {
-//            throw ResponseStatusException(
-//                HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be updated", err
-//            )
-//        }
-//    }
-//
-//    @DeleteMapping("/{document}")
-//    fun remove(@PathVariable("document") document: String): ResponseEntity<Void> {
-//        return try {
-//            customerService.deleteCustomer(document)
-//            ResponseEntity(HttpStatus.ACCEPTED)
-//        } catch (err: RuntimeException) {
-//            throw ResponseStatusException(
-//                HttpStatus.INTERNAL_SERVER_ERROR, "Customer cannot be deleted", err
-//            )
-//        }
-//    }
 }

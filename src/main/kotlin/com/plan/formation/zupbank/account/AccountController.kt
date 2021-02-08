@@ -1,8 +1,6 @@
 package com.plan.formation.zupbank.account
 
 import com.plan.formation.zupbank.account.dtos.AccountView
-import com.plan.formation.zupbank.customer.dtos.CustomerView
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,10 +9,9 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("accounts")
-class AccountController {
-
-    @Autowired private lateinit var accountService: AccountService
-
+class AccountController(
+    private var accountService: AccountService
+) {
     @PostMapping("/{document}")
     fun create(@PathVariable("document") document: String): ResponseEntity<AccountView> {
         return try {
@@ -49,7 +46,10 @@ class AccountController {
     }
 
     @PutMapping("/{document}")
-    fun update(@PathVariable("document") accountNumber: String, @RequestBody account: AccountModel): ResponseEntity<AccountView> {
+    fun update(
+        @PathVariable("document") accountNumber: String,
+        @RequestBody account: AccountModel
+    ): ResponseEntity<AccountView> {
         return try {
             ResponseEntity.ok(accountService.updateAccount(accountNumber, account))
         } catch (err: RuntimeException) {

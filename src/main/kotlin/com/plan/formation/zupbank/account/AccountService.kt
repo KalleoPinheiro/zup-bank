@@ -9,10 +9,13 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class AccountService {
-    @Autowired private lateinit var accountRepository: AccountRepository
-    @Autowired private lateinit var customerRepository: CustomerRepository
+    @Autowired
+    private lateinit var accountRepository: AccountRepository
+    @Autowired
+    private lateinit var customerRepository: CustomerRepository
 
-    @Autowired private lateinit var ensureCustomerHasOneAccountUseCase: EnsureCustomerHasOneAccountUseCase
+    @Autowired
+    private lateinit var ensureCustomerHasOneAccountUseCase: EnsureCustomerHasOneAccountUseCase
 
     fun listAccounts(): List<AccountView> = accountRepository.findAll().map { account -> account.toView() }
 
@@ -29,8 +32,6 @@ class AccountService {
     }
 
     fun updateAccount(accountNumber: String, accountToUpdate: AccountModel): AccountView {
-        // Update Here
-
         accountRepository.save(accountToUpdate)
         return accountToUpdate.toView()
 
@@ -38,14 +39,14 @@ class AccountService {
 
     fun deleteAccount(accountNumber: String) {
         val accountToDelete = accountRepository.findByAccountNumber(accountNumber)
-            .orElseThrow { RuntimeException ("Account not found") }
+            .orElseThrow { RuntimeException("Account not found") }
 
         return accountRepository.delete(accountToDelete)
     }
 
     fun findAccount(accountNumber: String): AccountView {
         val customerFound = accountRepository.findByAccountNumber(accountNumber)
-            .orElseThrow { RuntimeException ("Account not found") }
+            .orElseThrow { RuntimeException("Account not found") }
         return customerFound.toView()
     }
 }
@@ -53,8 +54,8 @@ class AccountService {
 fun AccountModel.toView() = AccountView(
     account_number = "$accountNumber",
     balance = "$balance",
-    create_date = "$createDate".format (DateTimeFormatter.ofPattern ( "M / d / y H: m: ss" )),
-    end_date = "$endDate".format (DateTimeFormatter.ofPattern ( "M / d / y H: m: ss" )),
+    create_date = "$createDate".format(DateTimeFormatter.ofPattern("M / d / y H: m: ss")),
+    end_date = "$endDate".format(DateTimeFormatter.ofPattern("M / d / y H: m: ss")),
     customer_name = "${customer.name}",
     customer_document = "${customer.document}"
 )

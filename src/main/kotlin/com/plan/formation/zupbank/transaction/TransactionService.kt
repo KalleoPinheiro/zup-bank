@@ -2,40 +2,39 @@ package com.plan.formation.zupbank.transaction
 
 import com.plan.formation.zupbank.account.AccountRepository
 import com.plan.formation.zupbank.account.useCases.EnsureAccountIsValid
-import com.plan.formation.zupbank.customer.CustomerRepository
 import com.plan.formation.zupbank.customer.useCases.EnsureCustomerExistsAndActive
-import com.plan.formation.zupbank.transaction.dtos.TransactionDepositWithdrawalView
-import com.plan.formation.zupbank.transaction.dtos.TransactionTransferRequestView
-import com.plan.formation.zupbank.transaction.dtos.TransactionTransferView
-import com.plan.formation.zupbank.transaction.dtos.TransactionView
+import com.plan.formation.zupbank.transaction.dtos.*
 import com.plan.formation.zupbank.transaction.useCases.EnsureAccountBalance
 import com.plan.formation.zupbank.transaction.useCases.EnsureAccountsDifferent
 import com.plan.formation.zupbank.utils.enums.TransactionType
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 
 @Service
-class TransactionService {
-    @Autowired private lateinit var transactionRepository: TransactionRepository
-    @Autowired private lateinit var customerRepository: CustomerRepository
-    @Autowired private lateinit var accountRepository: AccountRepository
-    @Autowired private lateinit var ensureCustomerExistsAndActive: EnsureCustomerExistsAndActive
-    @Autowired private lateinit var ensureAccountIsValid: EnsureAccountIsValid
-    @Autowired private lateinit var ensureAccountBalance: EnsureAccountBalance
-    @Autowired private lateinit var ensureAccountsDifferent: EnsureAccountsDifferent
-
+class TransactionService(
+    private var transactionRepository: TransactionRepository,
+    private var ensureCustomerExistsAndActive: EnsureCustomerExistsAndActive,
+    private var accountRepository: AccountRepository,
+    private var ensureAccountIsValid: EnsureAccountIsValid,
+    private var ensureAccountBalance: EnsureAccountBalance,
+    private var ensureAccountsDifferent: EnsureAccountsDifferent
+) {
     fun listTransactions(): List<TransactionModel> = transactionRepository.findAll()
 
-    fun deposit(customer: String, transactionRequestWithdrawal: TransactionDepositWithdrawalView): TransactionView {
-        val customer = ensureCustomerExistsAndActive.handle(customer)
+    fun deposit(
+        customerDocument: String,
+        transactionRequestDeposit: TransactionDepositWithdrawalView
+    ): TransactionView {
+        val customer = ensureCustomerExistsAndActive.handle(customerDocument)
 
-        val account = accountRepository.findByAccountNumber(customer.account?.accountNumber!!).orElseThrow { RuntimeException("Account not found") }
+        val account = accountRepository.findByAccountNumber(customer.account?.accountNumber!!)
+            .orElseThrow { RuntimeException("Account not found") }
 
-        if(account.balance!! < transactionRequestWithdrawal.transaction_amount) {
-            throw RuntimeException("Balance unavailable for this operation")
+        if (transactionRequestDeposit.transaction_amount <= BigDecimal.ZERO) {
+            throw RuntimeException("Transaction amount can't be less than or equal 0")
         }
 
-        val newAccountBalance = account.balance!!.plus(transactionRequestWithdrawal.transaction_amount)
+        val newAccountBalance = account.balance!!.plus(transactionRequestDeposit.transaction_amount)
 
         account.apply {
             this.balance = newAccountBalance
@@ -43,19 +42,28 @@ class TransactionService {
 
         accountRepository.save(account)
 
-        val transactionToSave = TransactionModel(transactionType = TransactionType.DEPOSIT, customer = customer, account = account, transactionAmount = transactionRequestWithdrawal.transaction_amount)
+        val transactionToSave = TransactionModel(
+            transactionType = TransactionType.DEPOSIT,
+            customer = customer,
+            account = account,
+            transactionAmount = transactionRequestDeposit.transaction_amount
+        )
 
         val transaction = transactionRepository.save(transactionToSave)
 
         return transaction.toView()
     }
 
-    fun withdrawal(customer: String, transactionRequestWithdrawal: TransactionDepositWithdrawalView): TransactionView {
-        val customer = ensureCustomerExistsAndActive.handle(customer)
+    fun withdrawal(
+        customerDocument: String,
+        transactionRequestWithdrawal: TransactionDepositWithdrawalView
+    ): TransactionView {
+        val customer = ensureCustomerExistsAndActive.handle(customerDocument)
 
-        val account = accountRepository.findByAccountNumber(customer.account?.accountNumber!!).orElseThrow { RuntimeException("Account not found") }
+        val account = accountRepository.findByAccountNumber(customer.account?.accountNumber!!)
+            .orElseThrow { RuntimeException("Account not found") }
 
-        if(account.balance!! < transactionRequestWithdrawal.transaction_amount) {
+        if (account.balance!! < transactionRequestWithdrawal.transaction_amount) {
             throw RuntimeException("Balance unavailable for this operation")
         }
 
@@ -67,16 +75,25 @@ class TransactionService {
 
         accountRepository.save(account)
 
-        val transactionToSave = TransactionModel(transactionType = TransactionType.WITHDRAWAL, customer = customer, account = account, transactionAmount = transactionRequestWithdrawal.transaction_amount)
+        val transactionToSave = TransactionModel(
+            transactionType = TransactionType.WITHDRAWAL,
+            customer = customer,
+            account = account,
+            transactionAmount = transactionRequestWithdrawal.transaction_amount
+        )
 
         val transaction = transactionRepository.save(transactionToSave)
 
         return transaction.toView()
     }
 
-    fun transfer(customer: String, transactionRequest: TransactionTransferRequestView): TransactionTransferView {
-        val customer = ensureCustomerExistsAndActive.handle(customer)
-        val originAccount = accountRepository.findByAccountNumber(customer.account?.accountNumber!!).orElseThrow { RuntimeException ("Account not found") }
+    fun transfer(
+        customerDocument: String,
+        transactionRequest: TransactionTransferRequestView
+    ): TransactionTransferView {
+        val customer = ensureCustomerExistsAndActive.handle(customerDocument)
+        val originAccount = accountRepository.findByAccountNumber(customer.account?.accountNumber!!)
+            .orElseThrow { RuntimeException("Account not found") }
         val destinyAccount = ensureAccountIsValid.handle(transactionRequest.account)
 
         ensureAccountsDifferent.handle(originAccount.accountNumber!!, destinyAccount.accountNumber!!)
@@ -96,11 +113,55 @@ class TransactionService {
         accountRepository.save(originAccount)
         accountRepository.save(destinyAccount)
 
-        val transactionToSave = TransactionModel(transactionType = TransactionType.TRANSFER, customer = customer, account = destinyAccount, transactionAmount = transactionRequest.transaction_amount)
+        val transactionToSave = TransactionModel(
+            transactionType = TransactionType.TRANSFER,
+            customer = customer,
+            account = destinyAccount,
+            transactionAmount = transactionRequest.transaction_amount
+        )
 
         val transaction = transactionRepository.save(transactionToSave)
 
         return transaction.toTransferView()
+    }
+
+    fun balance(customerDocument: String): TransactionBalanceView {
+        val customer = ensureCustomerExistsAndActive.handle(customerDocument)
+
+        val transactionToSave = TransactionModel(
+            transactionType = TransactionType.BALANCE,
+            customer = customer,
+            account = customer.account!!,
+            transactionAmount = BigDecimal.ZERO
+        )
+
+        val transaction = transactionRepository.save(transactionToSave)
+        return transaction.toTransferBalanceView()
+    }
+
+    fun statement(customerDocument: String): List<TransactionModel> {
+        val customer = ensureCustomerExistsAndActive.handle(customerDocument)
+
+        val transactions = transactionRepository.findAll()
+            .filter {
+                it.account.customer.document == customerDocument &&
+                        it.transactionType in listOf(
+                    TransactionType.TRANSFER,
+                    TransactionType.DEPOSIT,
+                    TransactionType.WITHDRAWAL
+                )
+            }
+
+        val transactionToSave = TransactionModel(
+            transactionType = TransactionType.STATEMENT,
+            customer = customer,
+            account = customer.account!!,
+            transactionAmount = BigDecimal.ZERO
+        )
+
+        transactionRepository.save(transactionToSave)
+
+        return transactions
     }
 
 }
@@ -124,4 +185,8 @@ fun TransactionModel.toTransferView() = TransactionTransferView(
     account_number_origin = customer.account?.accountNumber!!,
     account_number_destiny = "${account.accountNumber}",
     checking_copy = "$transactionType-$id"
+)
+
+fun TransactionModel.toTransferBalanceView() = TransactionBalanceView(
+    balance = "${customer.account?.balance}"
 )

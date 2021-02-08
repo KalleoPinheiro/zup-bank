@@ -3,14 +3,14 @@ package com.plan.formation.zupbank.customer
 import com.plan.formation.zupbank.customer.dtos.CustomerView
 import com.plan.formation.zupbank.customer.useCases.ValidatesExistenceCustomerUseCase
 import com.plan.formation.zupbank.customer.useCases.ValidatesWhetherDocumentIsValidUseCase
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class CustomerService {
-    @Autowired private lateinit var customerRepository: CustomerRepository
-    @Autowired private lateinit var validatesWhetherDocumentIsValidUseCase: ValidatesWhetherDocumentIsValidUseCase
-    @Autowired private lateinit var validatesExistenceCustomerUseCase: ValidatesExistenceCustomerUseCase
+class CustomerService(
+    private var customerRepository: CustomerRepository,
+    private var validatesWhetherDocumentIsValidUseCase: ValidatesWhetherDocumentIsValidUseCase,
+    private var validatesExistenceCustomerUseCase: ValidatesExistenceCustomerUseCase
+) {
 
     fun listCustomers(): List<CustomerView> = customerRepository.findAll().map { customer -> customer.toView() }
 
@@ -25,10 +25,10 @@ class CustomerService {
     fun updateCustomer(document: String, customerToUpdate: CustomerModel): CustomerView {
         validatesWhetherDocumentIsValidUseCase.handle(customerToUpdate.document)
         val customerToSave = customerRepository.findByDocument(document)
-            .orElseThrow { RuntimeException ("Customer not found") }
+            .orElseThrow { RuntimeException("Customer not found") }
             .apply {
-                this.document = customerToUpdate.document
                 this.name = customerToUpdate.name
+                this.document = customerToUpdate.document
             }
 
         customerRepository.save(customerToSave)
@@ -38,14 +38,14 @@ class CustomerService {
 
     fun deleteCustomer(document: String) {
         val customerToDelete = customerRepository.findByDocument(document)
-            .orElseThrow { RuntimeException ("Customer not found") }
+            .orElseThrow { RuntimeException("Customer not found") }
 
         return customerRepository.delete(customerToDelete)
     }
 
     fun findCustomer(document: String): CustomerView {
         val customerFound = customerRepository.findByDocument(document)
-            .orElseThrow { RuntimeException ("Customer not found") }
+            .orElseThrow { RuntimeException("Customer not found") }
 
         return customerFound.toView()
     }
